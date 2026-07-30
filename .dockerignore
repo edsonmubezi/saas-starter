@@ -1,0 +1,24 @@
+.git
+.gitignore
+*.log
+*.tmp
+**/*.swp
+**/*.swo
+
+# build outputs
+bin/
+dist/
+out/
+coverage/
+*.coverprofile
+
+# frontend (if present)
+node_modules/
+build/
+.vite/
+.next/
+*.map
+
+# IDE
+.vscode/
+.idea/

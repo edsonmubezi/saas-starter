@@ -1,0 +1,238 @@
+# =============================================================================
+# SaaS Starter - Docker Compose
+# =============================================================================
+# Backend API + PostgreSQL + Redis
+#
+# Usage:
+#   Development:        docker-compose up -d
+#   With Observability: docker-compose --profile observability up -d
+#   With Security:      docker-compose --profile security up -d
+#
+# Required environment variables (create .env file):
+#   - DB_PASSWORD (required)
+#   - JWT_SECRET  (required — 64+ random bytes)
+#   - SECRET_KEY  (required — exactly 32 bytes)
+# =============================================================================
+
+networks:
+  saas-network:
+    driver: bridge
+  shared-network:
+    external: true
+
+volumes:
+  postgres-data:
+  redis-data:
+  clamav-db:
+  grafana-data:
+
+services:
+  # ============================================================================
+  # Database Services
+  # ============================================================================
+
+  db:
+    image: pgvector/pgvector:pg15
+    container_name: saas-db
+    hostname: db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-saas}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+      POSTGRES_DB: ${DB_NAME:-saas_db}
+      POSTGRES_MULTIPLE_DATABASES: ${DB_NAME:-saas_db}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./ops/postgres/init-multiple-dbs.sh:/docker-entrypoint-initdb.d/init-multiple-dbs.sh:ro
+    ports:
+      - "5435:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-saas} -d ${DB_NAME:-saas_db}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks:
+      saas-network:
+        aliases: [db, postgres]
+
+  redis:
+    image: redis:7-alpine
+    container_name: saas-redis
+    hostname: redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    ports:
+      - "${REDIS_PORT:-6380}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks: [saas-network]
+
+  # ============================================================================
+  # Application Services
+  # ============================================================================
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VERSION: ${VERSION:-dev}
+        COMMIT: ${COMMIT:-unknown}
+    image: saas-starter-api:${VERSION:-latest}
+    container_name: saas-api
+    hostname: app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # Server
+      PORT: "8080"
+      BASE_URL: ${BASE_URL:-http://localhost:8086}
+      RUNTIME_ENV: ${RUNTIME_ENV:-development}
+
+      # Database
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_USER: ${DB_USER:-saas}
+      DB_PASSWORD: ${DB_PASSWORD:-password}
+      DB_NAME: ${DB_NAME:-saas_db}
+      DB_SSLMODE: disable
+
+      # Security
+      JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-change-in-production}
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
+      CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-http://localhost}
+
+      # Redis
+      REDIS_ENABLED: "true"
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ""
+      REDIS_DB: "0"
+
+      # Storage
+      ENABLE_FILE_UPLOAD: ${ENABLE_FILE_UPLOAD:-true}
+      STORAGE_TYPE: ${STORAGE_TYPE:-local}
+
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      LOG_FORMAT: ${LOG_FORMAT:-json}
+      LOG_SAMPLING: "true"
+
+      # ClamAV (enable with security profile)
+      CLAMAV_ENABLED: ${CLAMAV_ENABLED:-false}
+      CLAMAV_ADDR: tcp://clamav:3310
+
+      # Audit
+      AUDIT_WORKER_ENABLED: "true"
+      AUDIT_ARCHIVE_ENABLED: ${AUDIT_ARCHIVE_ENABLED:-false}
+
+      # Email / Alerting
+      ALERTING_ENABLED: ${ALERTING_ENABLED:-false}
+      SMTP_ENABLED: ${SMTP_ENABLED:-false}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-${SMTP_USERNAME:-}}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM_ADDRESS: ${SMTP_FROM_ADDRESS:-noreply@example.com}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME:-SaaS Starter}
+
+      # Migrations
+      RUN_MIGRATIONS: ${RUN_MIGRATIONS:-true}
+
+    volumes:
+      - ./uploads:/app/uploads
+    ports:
+      - "8086:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/health >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - saas-network
+      - shared-network
+
+  # ============================================================================
+  # Frontend (React SPA served via Nginx)
+  # ============================================================================
+
+  frontend:
+    build:
+      context: ${FRONTEND_DIR:-./frontend}
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: /api
+    image: saas-starter-frontend:${VERSION:-latest}
+    container_name: saas-frontend
+    hostname: frontend
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_PORT:-8083}:80"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    networks: [saas-network]
+
+  # ============================================================================
+  # Observability (Profile: observability)
+  # ============================================================================
+
+  grafana:
+    profiles: [observability]
+    image: grafana/grafana:10.2.2
+    container_name: saas-grafana
+    hostname: grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_SERVER_ROOT_URL: ${GRAFANA_ROOT_URL:-http://localhost:3000}
+    volumes:
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [saas-network]
+
+  # ============================================================================
+  # Security Services (Profile: security)
+  # ============================================================================
+
+  clamav:
+    profiles: [security]
+    image: clamav/clamav:latest
+    container_name: saas-clamav
+    hostname: clamav
+    restart: unless-stopped
+    environment:
+      FRESHCLAM_CHECKS: "12"
+      CLAMD_STARTUP_TIMEOUT: "180"
+    volumes:
+      - clamav-db:/var/lib/clamav
+    ports:
+      - "${CLAMAV_PORT:-3310}:3310"
+    healthcheck:
+      test: ["CMD-SHELL", "clamdscan --version >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 10
+    networks: [saas-network]

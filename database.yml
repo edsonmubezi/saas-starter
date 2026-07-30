@@ -1,0 +1,14 @@
+development:
+  dialect: postgres
+  url: postgres://user:password@localhost:5432/myapp?sslmode=disable
+  pool: 5
+
+test:
+  dialect: postgres
+  url: postgres://username:password@localhost:5432/myapp_test?sslmode=disable
+  pool: 5
+
+production:
+  dialect: postgres
+  url: postgres://username:password@localhost:5432/myapp_prod?sslmode=disable
+  pool: 10

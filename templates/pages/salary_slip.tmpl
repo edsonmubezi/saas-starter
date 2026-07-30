@@ -1,0 +1,77 @@
+{{define "title"}}Salary Slip – {{.PayrollMonth}}{{end}}
+
+{{define "content"}}
+  <div class="title-banner">Salary Slip</div>
+  <div class="subtitle">{{.PayrollMonth}}</div>
+
+  <!-- Employee Info -->
+  <table class="grid" style="margin-bottom:10px;">
+    <tbody>
+      <tr>
+        <td class="label">Employee Name</td><td class="val">{{.EmployeeName}}</td>
+        <td class="label">Employee ID</td><td class="val">{{.EmployeeID}}</td>
+      </tr>
+      <tr>
+        <td class="label">Designation</td><td class="val">{{.Designation}}</td>
+        <td class="label">Department</td><td class="val">{{.Department}}</td>
+      </tr>
+      <tr>
+        <td class="label">Bank Account / IBAN</td><td class="val">{{.BankAccount}}</td>
+        <td class="label">Date of Joining</td><td class="val">{{.DateOfJoining}}</td>
+      </tr>
+      <tr>
+        <td class="label">Tax ID</td><td class="val">{{.TaxId}}</td>
+        <td class="label">Slip No.</td><td class="val">{{.SlipNumber}}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="two-col">
+    <!-- Earnings -->
+    <table class="grid">
+      <thead><tr><th>Component</th><th style="text-align:right;">Amount ({{.Currency}})</th></tr></thead>
+      <tbody>
+        <tr><td>Basic Salary</td><td style="text-align:right;">{{.BasicSalary}}</td></tr>
+        <tr><td>House Allowance</td><td style="text-align:right;">{{.HouseAllowance}}</td></tr>
+        <tr><td>Transport Allowance</td><td style="text-align:right;">{{.TransportAllowance}}</td></tr>
+        <tr><td>Other Allowances</td><td style="text-align:right;">{{.OtherAllowances}}</td></tr>
+      </tbody>
+      <tfoot><tr><td>Gross Salary</td><td style="text-align:right;">{{.GrossSalary}}</td></tr></tfoot>
+    </table>
+
+    <!-- Deductions -->
+    <table class="grid">
+      <thead><tr><th>Component</th><th style="text-align:right;">Amount ({{.Currency}})</th></tr></thead>
+      <tbody>
+        <tr><td>Tax (PAYE)</td><td style="text-align:right;">{{.TaxPAYE}}</td></tr>
+        <tr><td>NSSF / Pension</td><td style="text-align:right;">{{.Pension}}</td></tr>
+        <tr><td>Loan Deduction</td><td style="text-align:right;">{{.LoanDeduction}}</td></tr>
+        <tr><td>Other Deductions</td><td style="text-align:right;">{{.OtherDeductions}}</td></tr>
+      </tbody>
+      <tfoot><tr><td>Total Deductions</td><td style="text-align:right;">{{.TotalDeductions}}</td></tr></tfoot>
+    </table>
+  </div>
+
+  <div class="netbox">
+    <div class="head">Net Salary</div>
+    <div class="row"><div>Net Pay ({{.Currency}})</div><div style="text-align:right;">{{.NetSalary}}</div></div>
+    <div class="row"><div>Amount in Words</div><div>{{.NetSalaryInWords}}</div></div>
+  </div>
+
+  <div class="sign-row">
+    <div>
+      <div><strong>Prepared by</strong></div>
+      <div>{{.PreparedByName}}</div>
+      <div style="margin-top:12px;">Signature: __________________________</div>
+    </div>
+    <div>
+      <div><strong>Approved by</strong></div>
+      <div>{{.ApprovedByName}}</div>
+      <div style="margin-top:12px;">Date: {{.ApprovedDate}}</div>
+    </div>
+  </div>
+
+  <div class="muted" style="margin-top:14px;">
+    This salary slip is confidential and intended solely for the employee.
+  </div>
+{{end}}

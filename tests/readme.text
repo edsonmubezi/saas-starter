@@ -1,0 +1,31 @@
+
+
+
+REPORT ON TESTING
+on repository we do intergration testing
+on usecase we do unit testing
+on handlers we do intergration testing
+
+
+FOLDER STRUCTURE 
+api/
+├── handler/
+├── middleware/
+└── router/
+cmd/
+internal/
+├── companies/
+├── logs/
+├── permission/
+├── role/
+└── user/
+    ├── entity.go
+    ├── repository.go
+    └── usecase.go
+
+migrations/
+pkg/
+tests/
+.env
+go.mod
+go.sum

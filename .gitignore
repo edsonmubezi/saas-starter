@@ -1,0 +1,40 @@
+# Environment files (contains secrets)
+.env
+.env.local
+.env.*.local
+
+# Uploads directory
+/uploads/
+
+# Dependencies
+/vendor/
+/template
+# Temporary files
+/tmp/
+/build/
+/mdfiles/
+
+# Docker
+# docker-compose.prod.yml
+
+# Logs
+*.log
+/logs/
+
+# Backups
+*.tar.gz
+/*.sql
+*.dump
+
+# # But track migration files
+# !db/migrations/*.sql
+
+# Test coverage
+coverage.out
+*.test
+
+# OS files
+.DS_Store
+Thumbs.db
+
+.claude

@@ -1,0 +1,72 @@
+func (h *EmployeeHandler) ImportEmployees(w http.ResponseWriter, r *http.Request) {
+    file, header, err := r.FormFile("file")
+    if err != nil {
+        http.Error(w, "failed to read file", http.StatusBadRequest)
+        return
+    }
+    defer file.Close()
+
+    // Save temp
+    tmpPath := fmt.Sprintf("/tmp/%s", header.Filename)
+    out, _ := os.Create(tmpPath)
+    defer os.Remove(tmpPath)
+    io.Copy(out, file)
+    out.Close()
+
+    // Verify digital signature
+    valid, err := export.VerifyExcelSignature(tmpPath, "my-secret-sign-key")
+    if err != nil || !valid {
+        http.Error(w, "invalid or tampered file", http.StatusForbidden)
+        return
+    }
+
+    //  Signature valid → proceed parsing the Excel
+    fmt.Fprintln(w, "File verified and ready for processing")
+}
+
+// inside your handler
+func (h *EmployeeHandler) ExportEmployees(w http.ResponseWriter, r *http.Request) {
+    employees, err := h.repo.GetAllEmployees(r.Context())
+    if err != nil {
+        http.Error(w, "failed to fetch employees", http.StatusInternalServerError)
+        return
+    }
+
+    opts := export.ExportOptions{
+        Columns: []export.Column{
+            {Header: "Employee ID", FieldName: "ID"},
+            {Header: "Full Name", FieldName: "FullName"},
+            {Header: "Email", FieldName: "Email"},
+            {Header: "Department", FieldName: "DepartmentName"},
+        },
+        Lock:    true,
+        SignKey: "my-secret-sign-key", // 🔑 must be same for verify
+    }
+
+    if err := export.ExportProtectedToExcel(w, "employees", "Employees", employees, opts); err != nil {
+        http.Error(w, "failed to export excel", http.StatusInternalServerError)
+        return
+    }
+}
+
+
+
+columns := []export.ColumnMapping{
+    {Header: "Employee Name", FieldName: "Name"},
+    {Header: "Department", FieldName: "Department"},
+    {Header: "Salary", FieldName: "Salary"},
+}
+
+data := []Employee{
+    {Name: "Alice", Department: "HR", Salary: 1000},
+    {Name: "Bob", Department: "IT", Salary: 1200},
+}
+
+opts := export.ExportOptions{
+    SignKey: "my-secret-key",
+}
+
+err := export.ExportPDFWithColumns(w, "employees-report", data, columns, opts)
+if err != nil {
+    // handle error
+}

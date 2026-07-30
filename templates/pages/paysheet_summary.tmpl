@@ -1,0 +1,58 @@
+{{define "title"}}Paysheet Summary – {{.PayrollMonth}}{{end}}
+
+{{define "content"}}
+  <div class="title-banner">Paysheet Summary</div>
+  <div class="subtitle">{{.PayrollMonth}}</div>
+
+  <table class="grid" style="margin-bottom:8px;">
+    <tbody>
+      <tr>
+        <td class="label">Department</td><td class="val">{{.Department}}</td>
+        <td class="label">Location</td><td class="val">{{.Location}}</td>
+      </tr>
+      <tr>
+        <td class="label">Prepared By</td><td class="val">{{.PreparedByName}}</td>
+        <td class="label">Approved By</td><td class="val">{{.ApprovedByName}}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Big table that can span multiple pages -->
+  <table class="grid">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Employee</th>
+        <th style="text-align:right;">Basic ({{.Currency}})</th>
+        <th style="text-align:right;">Allowances</th>
+        <th style="text-align:right;">Deductions</th>
+        <th style="text-align:right;">Net ({{.Currency}})</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range $i, $r := .Rows}}
+      <tr>
+        <td>{{add $i 1}}</td>
+        <td>{{$r.Name}}</td>
+        <td style="text-align:right;">{{$r.Basic}}</td>
+        <td style="text-align:right;">{{$r.Allow}}</td>
+        <td style="text-align:right;">{{$r.Deduct}}</td>
+        <td style="text-align:right;">{{$r.Net}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="2">Totals</td>
+        <td style="text-align:right;">{{.Totals.Basic}}</td>
+        <td style="text-align:right;">{{.Totals.Allow}}</td>
+        <td style="text-align:right;">{{.Totals.Deduct}}</td>
+        <td style="text-align:right;">{{.Totals.Net}}</td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <div class="muted" style="margin-top:10px;">
+    Generated on {{.GeneratedAt}} • This document summarizes payroll by employee.
+  </div>
+{{end}}
