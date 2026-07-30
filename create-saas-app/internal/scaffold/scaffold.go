@@ -133,10 +133,13 @@ func buildReplacementPairs(opts Options) []Pair {
 		{Old: "saas_db", New: slugUnder + "_db"},
 		{Old: "saas", New: slugUnder}, // DB user in docker-compose
 
-		// 6–7: Go module path.
+		// 6–8: Go module path.
 		// https:// variant first so the bare "github.com/…" rule doesn't create
 		// a double-prefixed URL.
+		// Swagger encodes Go type names with underscores (docs/docs.go), so we
+		// also replace the underscore form before the dot form fires.
 		{Old: "https://github.com/edsonmubezi/myapp", New: "https://" + module},
+		{Old: "github_com_edsonmubezi_myapp", New: "github_com_" + opts.GithubUser + "_" + slugUnder},
 		{Old: "github.com/edsonmubezi/myapp", New: module},
 
 		// 8–9: Dockerfile binary paths.
