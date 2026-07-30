@@ -1,4 +1,4 @@
-module github.com/edsonmubezi/saas-starter/cli
+module github.com/edsonmubezi/saas-starter/create-saas-app
 
 go 1.23.0
 

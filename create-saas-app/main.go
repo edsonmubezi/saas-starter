@@ -7,8 +7,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/edsonmubezi/saas-starter/cli/internal/prompt"
-	"github.com/edsonmubezi/saas-starter/cli/internal/scaffold"
+	"github.com/edsonmubezi/saas-starter/create-saas-app/internal/prompt"
+	"github.com/edsonmubezi/saas-starter/create-saas-app/internal/scaffold"
 	"github.com/spf13/cobra"
 )
 

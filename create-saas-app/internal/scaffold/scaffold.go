@@ -34,14 +34,14 @@ var filesToDelete = []string{
 	"uploads",
 	".claude",
 	".git",
-	"cli", // the CLI source itself — never leaks into generated projects
+	"create-saas-app", // the CLI source itself — never leaks into generated projects
 }
 
 // skipDirs are directory names that WalkAndReplace will never descend into.
 var skipDirs = []string{
 	"node_modules",
 	".git",
-	"cli", // skip the CLI subtree during replacement pass
+	"create-saas-app", // skip the CLI subtree during replacement pass
 }
 
 // Scaffold runs the full scaffold pipeline:

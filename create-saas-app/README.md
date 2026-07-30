@@ -7,7 +7,7 @@ command.
 ## Install
 
 ```sh
-go install github.com/edsonmubezi/saas-starter/cli@latest
+go install github.com/edsonmubezi/saas-starter/create-saas-app@latest
 ```
 
 ## Usage
@@ -47,7 +47,7 @@ interactively.
 ## What it does
 
 1. **Clones** `saas-starter` (shallow clone, `--depth=1`)
-2. **Deletes** template-only files (`.env`, `go.sum`, `frontend/node_modules`, `.git`, `cli/`, etc.)
+2. **Deletes** template-only files (`.env`, `go.sum`, `frontend/node_modules`, `.git`, `create-saas-app/`, etc.)
 3. **Renames** every template string across all Go, TypeScript, YAML, JSON, Markdown, and config files:
    - `saas-starter` → `<slug>`
    - `github.com/edsonmubezi/myapp` → `github.com/<github-user>/<slug>`
