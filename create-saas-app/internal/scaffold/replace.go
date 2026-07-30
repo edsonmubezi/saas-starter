@@ -32,8 +32,9 @@ var textExtensions = map[string]bool{
 // textBasenames are exact filenames (no extension) that are also treated as
 // text files regardless of their extension (or lack thereof).
 var textBasenames = map[string]bool{
-	"Dockerfile": true,
-	"Makefile":   true,
+	"Dockerfile":    true,
+	"Makefile":      true,
+	".env.example":  true, // filepath.Ext(".env.example") == ".example", not ".env"
 }
 
 // WalkAndReplace walks root and applies every replacement pair to each text
