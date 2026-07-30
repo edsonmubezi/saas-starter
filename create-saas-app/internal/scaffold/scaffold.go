@@ -142,11 +142,20 @@ func buildReplacementPairs(opts Options) []Pair {
 		{Old: "github_com_edsonmubezi_myapp", New: "github_com_" + opts.GithubUser + "_" + slugUnder},
 		{Old: "github.com/edsonmubezi/myapp", New: module},
 
-		// 8–9: Dockerfile binary paths.
+		// 9–10: Dockerfile binary paths.
 		{Old: "/out/myapp", New: "/out/" + opts.Slug},
 		{Old: "/app/myapp", New: "/app/" + opts.Slug},
 
-		// 10–12: display name.
+		// 11–14: remaining bare "myapp" occurrences (database.yml URLs,
+		// Grafana dashboard container names, Grafana datasource database name).
+		// More-specific multi-word forms first so the bare catch-all doesn't
+		// fire on them prematurely.
+		{Old: "myapp-api", New: opts.Slug + "-api"},
+		{Old: "myapp_test", New: slugUnder + "_test"},
+		{Old: "myapp_prod", New: slugUnder + "_prod"},
+		{Old: "myapp", New: slugUnder + "_db"}, // catch-all: DB name in URLs and datasource configs
+
+		// 15–17: display name.
 		// VITE_ variant before the bare string so the bare rule doesn't
 		// partially mangle the env-var form.
 		{Old: "VITE_APP_NAME=SaaS Starter", New: "VITE_APP_NAME=" + opts.DisplayName},
