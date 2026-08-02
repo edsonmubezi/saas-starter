@@ -39,8 +39,8 @@ func RateLimitMiddleware(cfg config.SecurityConfig, limitType string) func(http.
 			// Check rate limit
 			allowed, resetTime, err := limiter.checkRateLimit(r.Context(), identifier, limitType)
 			if err != nil {
-				// Log error but don't block request if Redis is down
-				http.Error(w, "Rate limiting service temporarily unavailable", http.StatusServiceUnavailable)
+				// Redis is down — degrade gracefully rather than blocking all traffic
+				next.ServeHTTP(w, r)
 				return
 			}
 

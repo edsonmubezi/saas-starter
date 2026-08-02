@@ -1,5 +1,5 @@
 import React from 'react'
-import { CheckCircle, AlertCircle, MinusCircle, Check, X, XCircle } from 'lucide-react'
+import { CheckCircle, AlertCircle, MinusCircle, Check, X, XCircle, Clock } from 'lucide-react'
 import clsx from 'clsx'
 
 type StatusType =

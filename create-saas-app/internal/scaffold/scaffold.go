@@ -3,6 +3,8 @@
 package scaffold
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"os"
@@ -90,6 +92,13 @@ func Scaffold(opts Options) error {
 		}
 	}
 
+	// 5b. Inject generated secrets into .env so the project starts without
+	//     manual editing of security keys.
+	fmt.Println("Generating secrets...")
+	if err := injectSecrets(filepath.Join(opts.OutputDir, ".env")); err != nil {
+		return fmt.Errorf("injecting secrets: %w", err)
+	}
+
 	// 6. Post-processing.
 	fmt.Println("Running go mod tidy...")
 	if err := RunGoModTidy(opts.OutputDir); err != nil {
@@ -170,6 +179,48 @@ func buildReplacementPairs(opts Options) []Pair {
 		// (comments, URLs not matched above, etc.).
 		{Old: "edsonmubezi", New: opts.GithubUser},
 	}
+}
+
+// injectSecrets replaces placeholder secret values in the .env file with
+// cryptographically random strings that satisfy the application's validators:
+//
+//   - SECRET_KEY  — exactly 32 hex characters (16 random bytes → 32 hex chars)
+//   - JWT_SECRET  — 64 hex characters (32 random bytes → 64 hex chars)
+//   - DB_PASSWORD — 24 hex characters (12 random bytes → 24 hex chars)
+func injectSecrets(envPath string) error {
+	data, err := os.ReadFile(envPath)
+	if err != nil {
+		return err
+	}
+
+	secretKey, err := randHex(16) // 32-char hex
+	if err != nil {
+		return err
+	}
+	jwtSecret, err := randHex(32) // 64-char hex
+	if err != nil {
+		return err
+	}
+	dbPassword, err := randHex(12) // 24-char hex
+	if err != nil {
+		return err
+	}
+
+	content := string(data)
+	content = strings.ReplaceAll(content, "your-32-character-encryption-key", secretKey)
+	content = strings.ReplaceAll(content, "your-secret-jwt-key-change-this-in-production", jwtSecret)
+	content = strings.ReplaceAll(content, "change-this-password", dbPassword)
+
+	return os.WriteFile(envPath, []byte(content), 0600)
+}
+
+// randHex returns a hex-encoded string of n random bytes (length = 2*n).
+func randHex(n int) (string, error) {
+	b := make([]byte, n)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(b), nil
 }
 
 func copyFile(src, dst string) error {

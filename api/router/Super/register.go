@@ -59,6 +59,11 @@ func RegisterSuperAdminLevelRoutes(protected *mux.Router, useCases map[string]in
 		registerPermissionRoutes(protected)
 		registerOrganizationRoutes(protected)
 		registerOrgSettingsRoutes(protected)
+
+		// Dashboard
+		protected.Handle("/dashboard", middleware.ChainMiddleware(
+			wrapWithAuthorize(handler.GetAdminDashboardHandler, nil, []string{"admin.dashboard.view"}),
+		)).Methods("GET", "OPTIONS")
 	}
 
 	return orgUC
